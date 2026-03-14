@@ -23,6 +23,7 @@
 - [x] **核心排盤模組**: 封裝 `Lunar-Zenith` 調用，自動生成四柱干支。
 - [x] **完整命盤數據**: 整合十神、藏干、納音、長生運於一個數據模型。
 - [x] **神煞系統**: 實現基本的神煞邏輯（天乙、桃花、驛馬等）。
+- [x] **底層修正**: 升級 `lunar-zenith` 至 v0.1.1，修復年份硬編碼 Bug。
 
 ### Phase 4: 高級斷語與動態互動 (Interpretations)
 - [x] **動態神煞互動**: 計算大運/流年相對於命盤的神煞觸發。
@@ -35,7 +36,7 @@
 
 ## 3. 技術規格 (Technical Specs)
 - **Language**: Go 1.25+
-- **Input Engine**: `github.com/kaecer68/lunar-zenith`
+- **Input Engine**: `github.com/kaecer68/lunar-zenith` (v0.1.1+, fixed 2024 hardcode bug)
 - **Output Format**: JSON / Struct (支持 gRPC)
 
 ## 4. 視覺與體驗 (Visual Standards)

@@ -39,3 +39,32 @@ func TestGetBaziChart(t *testing.T) {
 		t.Errorf("2024 should be Jia-Chen, got %s%s", chart.YearPillar.Pillar.Stem, chart.YearPillar.Pillar.Branch)
 	}
 }
+
+func TestVerifyYearBug1972(t *testing.T) {
+	engine := NewBaziEngine()
+	loc, _ := time.LoadLocation("Asia/Taipei")
+	birthTime := time.Date(1972, 6, 15, 12, 0, 0, 0, loc)
+
+	chart := engine.GetBaziChart(birthTime, basis.Male)
+
+	yearPillar := string(chart.YearPillar.Pillar.Stem) + string(chart.YearPillar.Pillar.Branch)
+	expected := "壬子"
+	if yearPillar != expected {
+		t.Errorf("1972 Year Pillar should be %s, but got %s", expected, yearPillar)
+	}
+}
+
+func TestVerifyYearBug1990(t *testing.T) {
+	engine := NewBaziEngine()
+	loc, _ := time.LoadLocation("Asia/Taipei")
+	birthTime := time.Date(1990, 6, 15, 12, 0, 0, 0, loc)
+
+	chart := engine.GetBaziChart(birthTime, basis.Male)
+
+	yearPillar := string(chart.YearPillar.Pillar.Stem) + string(chart.YearPillar.Pillar.Branch)
+	expected := "庚午"
+	if yearPillar != expected {
+		t.Errorf("1990 Year Pillar should be %s, but got %s", expected, yearPillar)
+	}
+}
+
