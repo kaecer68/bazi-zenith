@@ -67,4 +67,3 @@ func TestVerifyYearBug1990(t *testing.T) {
 		t.Errorf("1990 Year Pillar should be %s, but got %s", expected, yearPillar)
 	}
 }
-

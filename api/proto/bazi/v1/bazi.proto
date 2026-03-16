@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package bazi.v1;
+
+option go_package = "github.com/kaecer68/bazi-zenith/gen/bazipb";
+
+// BaziService 提供八字命盤計算服務
+service BaziService {
+  // GetChart 根據出生時間與性別生成完整八字命盤
+  rpc GetChart (GetChartRequest) returns (GetChartResponse);
+}
+
+message GetChartRequest {
+  string datetime = 1;    // 出生日期時間，格式 "YYYY-MM-DD HH:mm"
+  string gender = 2;      // 性別: "male" (乾) 或 "female" (坤)
+  int32 target_year = 3;  // 流年目標年份，如 2025
+}
+
+message GetChartResponse {
+  string gender = 1;
+  string day_stem = 2;
+  map<string, PillarData> pillars = 3;
+  repeated DaYunData da_yun = 4;
+  int32 start_age_y = 5;
+  int32 start_age_m = 6;
+  StrengthAnalysis strength = 7;
+  repeated Interpretation advice = 8;
+}
+
+message PillarData {
+  string stem = 1;
+  string branch = 2;
+  string ten_god_stem = 3;
+  repeated string hidden_stems = 4;
+  repeated string ten_god_hidden = 5;
+  string na_yin = 6;
+  string life_stage = 7;
+  repeated string shen_sha = 8;
+}
+
+message DaYunData {
+  string pillar = 1;
+  int32 start_age = 2;
+}
+
+message StrengthAnalysis {
+  double score = 1;
+  string status = 2;
+  bool is_de_ling = 3;
+  bool is_de_di = 4;
+  bool is_de_zhu = 5;
+  double percentage = 6;
+}
+
+message Interpretation {
+  string title = 1;
+  string content = 2;
+  string type = 3;
+}

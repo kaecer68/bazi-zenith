@@ -114,7 +114,53 @@ go build -o bazi-cli ./cmd/bazi-cli
 ==========================================
 ```
 
-### JSON API 對接
+### REST API 服務
+
+```bash
+# 編譯 & 啟動
+go build -o bazi-server ./cmd/bazi-server
+./bazi-server -port 8080
+```
+
+**呼叫範例：**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/chart \
+  -H "Content-Type: application/json" \
+  -d '{"datetime": "1990-05-15 14:30", "gender": "male", "target_year": 2025}'
+```
+
+| 端點 | 方法 | 說明 |
+| :--- | :--- | :--- |
+| `/api/v1/chart` | POST | 生成八字命盤與流年斷語 |
+| `/health` | GET | 健康檢查 |
+
+### gRPC 服務
+
+```bash
+# 編譯 & 啟動
+go build -o bazi-grpc ./cmd/bazi-grpc
+./bazi-grpc -port 50051
+```
+
+**Proto 定義**：`api/proto/bazi/v1/bazi.proto`
+
+```protobuf
+service BaziService {
+  rpc GetChart (GetChartRequest) returns (GetChartResponse);
+}
+```
+
+**grpcurl 呼叫範例：**
+
+```bash
+grpcurl -plaintext -d '{"datetime": "1990-05-15 14:30", "gender": "male", "target_year": 2025}' \
+  localhost:50051 bazi.v1.BaziService/GetChart
+```
+
+> 已啟用 gRPC Server Reflection，可使用 grpcurl 或 Postman 直接探索 API。
+
+### JSON API 對接（程式碼內嵌）
 
 ```go
 import v1 "github.com/kaecer68/bazi-zenith/pkg/api/v1"
@@ -130,29 +176,20 @@ response := v1.FromChart(chart, advice)
 
 ```
 bazi-zenith/
+├── api/
+│   └── proto/bazi/v1/     # gRPC Proto 定義
+│       └── bazi.proto
 ├── cmd/
-│   └── bazi-cli/          # CLI 終端排盤工具
-│       └── main.go
+│   ├── bazi-cli/          # CLI 終端排盤工具
+│   ├── bazi-server/       # REST API 服務 (HTTP)
+│   └── bazi-grpc/         # gRPC 服務
+├── gen/
+│   └── bazipb/            # Proto 自動生成的 Go 代碼
 ├── pkg/
-│   ├── api/
-│   │   └── v1/            # JSON API 資料交換模型
-│   │       └── types.go
+│   ├── api/v1/            # JSON API 資料交換模型
 │   ├── basis/             # 基礎數據模型與算法
-│   │   ├── definitions.go # 天干、地支、五行、陰陽定義
-│   │   ├── hidden_stems.go# 地支藏干
-│   │   ├── ten_gods.go    # 十神關係
-│   │   ├── na_yin.go      # 納音五行
-│   │   ├── life_cycle.go  # 長生十二運
-│   │   ├── pillars.go     # 六十甲子序列
-│   │   ├── dayun.go       # 大運算法
-│   │   ├── cycles.go      # 流年流月算法
-│   │   ├── shensha.go     # 神煞系統
-│   │   └── interactions.go# 沖合害
 │   └── engine/            # 核心排盤引擎
-│       ├── engine.go      # BaziEngine 主邏輯
-│       ├── model.go       # BaziChart 數據模型
-│       ├── strength.go    # 身強身弱分析
-│       └── interpretation.go # 斷語生成
+├── Makefile               # 建構與 Proto 生成腳本
 ├── PRD.md                 # 產品需求文檔
 ├── LICENSE                # MIT License
 └── go.mod
@@ -165,6 +202,8 @@ bazi-zenith/
 | 套件 | 用途 |
 | :--- | :--- |
 | [lunar-zenith](https://github.com/kaecer68/lunar-zenith) | 天文級高精度太陽黃經計算、節氣定位 |
+| [google.golang.org/grpc](https://grpc.io/) | gRPC 框架 |
+| [google.golang.org/protobuf](https://protobuf.dev/) | Protocol Buffers |
 
 ---
 
@@ -175,7 +214,8 @@ bazi-zenith/
 - [x] Phase 3: 引擎整合（Lunar-Zenith 對接、神煞系統）
 - [x] Phase 4: 斷語生成（身強身弱、沖合害、流年互動）
 - [x] Phase 5: 應用介面（JSON API 模型、CLI 排盤工具）
-- [ ] Phase 6: 進階分析（格局判定、用神取用、深度斷語）
+- [x] Phase 6: 服務化（REST API、gRPC 服務、Proto 定義）
+- [ ] Phase 7: 進階分析（格局判定、用神取用、深度斷語）
 
 ---
 
@@ -205,5 +245,7 @@ bazi-zenith/
 ## 🙏 致謝
 
 本專案為「德凱 GoLuck」系列的一部分，基於傳統子平八字命理學，結合現代天文算法與軟體工程實踐而成。
-
+德凱/KAECER
+[@kaecer](https://twitter.com/kaecer)
+https://goluck.im/
 **Made with ❤️ by [Kaecer68](https://github.com/kaecer68)**
