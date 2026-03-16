@@ -179,7 +179,24 @@ bazi-zenith/
 
 ---
 
-## 📄 授權
+## � 關於作者
+
+**德凱/KAECER** — 對傳統文化數位化有興趣的前端工程師
+
+- **Blog**: https://goluck.im/
+- **Twitter**: [@kaecer](https://twitter.com/kaecer)
+
+### 🌟 相關專案
+
+| 專案名稱 | 說明 |
+| :--- | :--- |
+| [lunar-zenith](https://github.com/kaecer68/lunar-zenith) | 黃曆大全 — 天文級高精度節氣與農曆計算引擎 |
+| [ziwei-zenith](https://github.com/kaecer68/ziwei-zenith) | 紫微斗數 — 專業紫微斗數排盤與命理分析引擎 |
+| [bazi-zenith](https://github.com/kaecer68/bazi-zenith) | 八字直斷 — 子平八字排盤與流年斷語引擎（本專案） |
+
+---
+
+## �📄 授權
 
 本專案採用 [MIT License](LICENSE) 開源授權。
 
