@@ -34,10 +34,24 @@
 - [x] **API 資料模型**: 在 `pkg/api` 定義標準 JSON 交換格式。
 - [x] **CLI 終端工具**: 實現 `cmd/bazi-cli` 支持命令行排盤與精美終端輸出。
 
+### Phase 6: 服務化 (Service Layer)
+- [x] **REST API 服務**: `cmd/bazi-server`，基於標準 `net/http`，提供 `POST /api/v1/chart` 與 `GET /health` 端點，內建 CORS 支援。
+- [x] **gRPC 服務**: `cmd/bazi-grpc`，定義 `bazi.v1.BaziService/GetChart` RPC，啟用 Server Reflection。
+- [x] **Proto 定義**: `api/proto/bazi/v1/bazi.proto`，完整映射命盤資料結構（PillarData、DaYunData、StrengthAnalysis、Interpretation）。
+- [x] **建構腳本**: Makefile 支援 `make proto`、`make build-all`、`make run-rest`、`make run-grpc`。
+
+### Phase 7: 進階分析 (Advanced Analysis) — 待定
+- [ ] 格局判定（正官格、食神生財等）
+- [ ] 用神取用（喜用神、忌神推算）
+- [ ] 深度斷語（大運逐步解讀、流年細化分析）
+
 ## 3. 技術規格 (Technical Specs)
 - **Language**: Go 1.25+
 - **Input Engine**: `github.com/kaecer68/lunar-zenith` (v0.1.1+, fixed 2024 hardcode bug)
-- **Output Format**: JSON / Struct (支持 gRPC)
+- **Output Format**: JSON / Struct / Protobuf
+- **REST**: 標準 `net/http`（Go 1.22+ 方法路由），預設埠 8080
+- **gRPC**: `google.golang.org/grpc` v1.79+，預設埠 50051
+- **Proto**: `protoc` v3+，`protoc-gen-go` + `protoc-gen-go-grpc`
 
 ## 4. 視覺與體驗 (Visual Standards)
 - 所有輸出的中文符號必須採用「繁體中文」。
