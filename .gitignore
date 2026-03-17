@@ -24,6 +24,6 @@ Thumbs.db
 
 # Antigravity local
 .antigravity/
-bazi-grpc
-bazi-server
+/bazi-grpc
+/bazi-server
 bin/

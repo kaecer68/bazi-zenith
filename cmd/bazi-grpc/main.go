@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -71,14 +73,14 @@ func toProto(r v1.BaziResponse) *bazipb.GetChartResponse {
 
 	for name, p := range r.Pillars {
 		resp.Pillars[name] = &bazipb.PillarData{
-			Stem:        p.Stem,
-			Branch:      p.Branch,
-			TenGodStem:  p.TenGodStem,
-			HiddenStems: p.HiddenStems,
+			Stem:         p.Stem,
+			Branch:       p.Branch,
+			TenGodStem:   p.TenGodStem,
+			HiddenStems:  p.HiddenStems,
 			TenGodHidden: p.TenGodHidden,
-			NaYin:       p.NaYin,
-			LifeStage:   p.LifeStage,
-			ShenSha:     p.ShenSha,
+			NaYin:        p.NaYin,
+			LifeStage:    p.LifeStage,
+			ShenSha:      p.ShenSha,
 		}
 	}
 
@@ -101,7 +103,13 @@ func toProto(r v1.BaziResponse) *bazipb.GetChartResponse {
 }
 
 func main() {
-	port := flag.Int("port", 50051, "gRPC server port")
+	defaultPort := 50052
+	if v := os.Getenv("GRPC_PORT"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			defaultPort = n
+		}
+	}
+	port := flag.Int("port", defaultPort, "gRPC server port (overridden by GRPC_PORT env)")
 	flag.Parse()
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))

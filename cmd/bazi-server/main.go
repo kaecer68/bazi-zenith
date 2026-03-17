@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kaecer68/bazi-zenith/internal/grpcserver"
 	v1 "github.com/kaecer68/bazi-zenith/pkg/api/v1"
 	"github.com/kaecer68/bazi-zenith/pkg/basis"
 	"github.com/kaecer68/bazi-zenith/pkg/engine"
@@ -23,6 +24,9 @@ type ChartRequest struct {
 func main() {
 	port := flag.Int("port", 8080, "HTTP server port")
 	flag.Parse()
+
+	// Start gRPC server in a goroutine
+	go grpcserver.Start()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/v1/chart", handleChart)
