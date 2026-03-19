@@ -82,17 +82,20 @@ func (x *GetChartRequest) GetTargetYear() int32 {
 }
 
 type GetChartResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Gender        string                 `protobuf:"bytes,1,opt,name=gender,proto3" json:"gender,omitempty"`
-	DayStem       string                 `protobuf:"bytes,2,opt,name=day_stem,json=dayStem,proto3" json:"day_stem,omitempty"`
-	Pillars       map[string]*PillarData `protobuf:"bytes,3,rep,name=pillars,proto3" json:"pillars,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	DaYun         []*DaYunData           `protobuf:"bytes,4,rep,name=da_yun,json=daYun,proto3" json:"da_yun,omitempty"`
-	StartAgeY     int32                  `protobuf:"varint,5,opt,name=start_age_y,json=startAgeY,proto3" json:"start_age_y,omitempty"`
-	StartAgeM     int32                  `protobuf:"varint,6,opt,name=start_age_m,json=startAgeM,proto3" json:"start_age_m,omitempty"`
-	Strength      *StrengthAnalysis      `protobuf:"bytes,7,opt,name=strength,proto3" json:"strength,omitempty"`
-	Advice        []*Interpretation      `protobuf:"bytes,8,rep,name=advice,proto3" json:"advice,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Gender              string                 `protobuf:"bytes,1,opt,name=gender,proto3" json:"gender,omitempty"`
+	DayStem             string                 `protobuf:"bytes,2,opt,name=day_stem,json=dayStem,proto3" json:"day_stem,omitempty"`
+	Pillars             map[string]*PillarData `protobuf:"bytes,3,rep,name=pillars,proto3" json:"pillars,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	DaYun               []*DaYunData           `protobuf:"bytes,4,rep,name=da_yun,json=daYun,proto3" json:"da_yun,omitempty"`
+	StartAgeY           int32                  `protobuf:"varint,5,opt,name=start_age_y,json=startAgeY,proto3" json:"start_age_y,omitempty"`
+	StartAgeM           int32                  `protobuf:"varint,6,opt,name=start_age_m,json=startAgeM,proto3" json:"start_age_m,omitempty"`
+	Strength            *StrengthAnalysis      `protobuf:"bytes,7,opt,name=strength,proto3" json:"strength,omitempty"`
+	Advice              []*Interpretation      `protobuf:"bytes,8,rep,name=advice,proto3" json:"advice,omitempty"`
+	FavorableElements   []string               `protobuf:"bytes,9,rep,name=favorable_elements,json=favorableElements,proto3" json:"favorable_elements,omitempty"`
+	UnfavorableElements []string               `protobuf:"bytes,10,rep,name=unfavorable_elements,json=unfavorableElements,proto3" json:"unfavorable_elements,omitempty"`
+	Directions          *Directions            `protobuf:"bytes,11,opt,name=directions,proto3" json:"directions,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *GetChartResponse) Reset() {
@@ -181,6 +184,95 @@ func (x *GetChartResponse) GetAdvice() []*Interpretation {
 	return nil
 }
 
+func (x *GetChartResponse) GetFavorableElements() []string {
+	if x != nil {
+		return x.FavorableElements
+	}
+	return nil
+}
+
+func (x *GetChartResponse) GetUnfavorableElements() []string {
+	if x != nil {
+		return x.UnfavorableElements
+	}
+	return nil
+}
+
+func (x *GetChartResponse) GetDirections() *Directions {
+	if x != nil {
+		return x.Directions
+	}
+	return nil
+}
+
+type Directions struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Wealth        string                 `protobuf:"bytes,1,opt,name=wealth,proto3" json:"wealth,omitempty"`
+	Career        string                 `protobuf:"bytes,2,opt,name=career,proto3" json:"career,omitempty"`
+	Study         string                 `protobuf:"bytes,3,opt,name=study,proto3" json:"study,omitempty"`
+	Relationship  string                 `protobuf:"bytes,4,opt,name=relationship,proto3" json:"relationship,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Directions) Reset() {
+	*x = Directions{}
+	mi := &file_bazi_v1_bazi_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Directions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Directions) ProtoMessage() {}
+
+func (x *Directions) ProtoReflect() protoreflect.Message {
+	mi := &file_bazi_v1_bazi_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Directions.ProtoReflect.Descriptor instead.
+func (*Directions) Descriptor() ([]byte, []int) {
+	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Directions) GetWealth() string {
+	if x != nil {
+		return x.Wealth
+	}
+	return ""
+}
+
+func (x *Directions) GetCareer() string {
+	if x != nil {
+		return x.Career
+	}
+	return ""
+}
+
+func (x *Directions) GetStudy() string {
+	if x != nil {
+		return x.Study
+	}
+	return ""
+}
+
+func (x *Directions) GetRelationship() string {
+	if x != nil {
+		return x.Relationship
+	}
+	return ""
+}
+
 type PillarData struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Stem          string                 `protobuf:"bytes,1,opt,name=stem,proto3" json:"stem,omitempty"`
@@ -197,7 +289,7 @@ type PillarData struct {
 
 func (x *PillarData) Reset() {
 	*x = PillarData{}
-	mi := &file_bazi_v1_bazi_proto_msgTypes[2]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -209,7 +301,7 @@ func (x *PillarData) String() string {
 func (*PillarData) ProtoMessage() {}
 
 func (x *PillarData) ProtoReflect() protoreflect.Message {
-	mi := &file_bazi_v1_bazi_proto_msgTypes[2]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -222,7 +314,7 @@ func (x *PillarData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PillarData.ProtoReflect.Descriptor instead.
 func (*PillarData) Descriptor() ([]byte, []int) {
-	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{2}
+	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PillarData) GetStem() string {
@@ -291,7 +383,7 @@ type DaYunData struct {
 
 func (x *DaYunData) Reset() {
 	*x = DaYunData{}
-	mi := &file_bazi_v1_bazi_proto_msgTypes[3]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -303,7 +395,7 @@ func (x *DaYunData) String() string {
 func (*DaYunData) ProtoMessage() {}
 
 func (x *DaYunData) ProtoReflect() protoreflect.Message {
-	mi := &file_bazi_v1_bazi_proto_msgTypes[3]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -316,7 +408,7 @@ func (x *DaYunData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DaYunData.ProtoReflect.Descriptor instead.
 func (*DaYunData) Descriptor() ([]byte, []int) {
-	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{3}
+	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DaYunData) GetPillar() string {
@@ -347,7 +439,7 @@ type StrengthAnalysis struct {
 
 func (x *StrengthAnalysis) Reset() {
 	*x = StrengthAnalysis{}
-	mi := &file_bazi_v1_bazi_proto_msgTypes[4]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -359,7 +451,7 @@ func (x *StrengthAnalysis) String() string {
 func (*StrengthAnalysis) ProtoMessage() {}
 
 func (x *StrengthAnalysis) ProtoReflect() protoreflect.Message {
-	mi := &file_bazi_v1_bazi_proto_msgTypes[4]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -372,7 +464,7 @@ func (x *StrengthAnalysis) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StrengthAnalysis.ProtoReflect.Descriptor instead.
 func (*StrengthAnalysis) Descriptor() ([]byte, []int) {
-	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{4}
+	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *StrengthAnalysis) GetScore() float64 {
@@ -428,7 +520,7 @@ type Interpretation struct {
 
 func (x *Interpretation) Reset() {
 	*x = Interpretation{}
-	mi := &file_bazi_v1_bazi_proto_msgTypes[5]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -440,7 +532,7 @@ func (x *Interpretation) String() string {
 func (*Interpretation) ProtoMessage() {}
 
 func (x *Interpretation) ProtoReflect() protoreflect.Message {
-	mi := &file_bazi_v1_bazi_proto_msgTypes[5]
+	mi := &file_bazi_v1_bazi_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -453,7 +545,7 @@ func (x *Interpretation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Interpretation.ProtoReflect.Descriptor instead.
 func (*Interpretation) Descriptor() ([]byte, []int) {
-	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{5}
+	return file_bazi_v1_bazi_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Interpretation) GetTitle() string {
@@ -486,7 +578,7 @@ const file_bazi_v1_bazi_proto_rawDesc = "" +
 	"\bdatetime\x18\x01 \x01(\tR\bdatetime\x12\x16\n" +
 	"\x06gender\x18\x02 \x01(\tR\x06gender\x12\x1f\n" +
 	"\vtarget_year\x18\x03 \x01(\x05R\n" +
-	"targetYear\"\xab\x03\n" +
+	"targetYear\"\xc2\x04\n" +
 	"\x10GetChartResponse\x12\x16\n" +
 	"\x06gender\x18\x01 \x01(\tR\x06gender\x12\x19\n" +
 	"\bday_stem\x18\x02 \x01(\tR\adayStem\x12@\n" +
@@ -495,10 +587,22 @@ const file_bazi_v1_bazi_proto_rawDesc = "" +
 	"\vstart_age_y\x18\x05 \x01(\x05R\tstartAgeY\x12\x1e\n" +
 	"\vstart_age_m\x18\x06 \x01(\x05R\tstartAgeM\x125\n" +
 	"\bstrength\x18\a \x01(\v2\x19.bazi.v1.StrengthAnalysisR\bstrength\x12/\n" +
-	"\x06advice\x18\b \x03(\v2\x17.bazi.v1.InterpretationR\x06advice\x1aO\n" +
+	"\x06advice\x18\b \x03(\v2\x17.bazi.v1.InterpretationR\x06advice\x12-\n" +
+	"\x12favorable_elements\x18\t \x03(\tR\x11favorableElements\x121\n" +
+	"\x14unfavorable_elements\x18\n" +
+	" \x03(\tR\x13unfavorableElements\x123\n" +
+	"\n" +
+	"directions\x18\v \x01(\v2\x13.bazi.v1.DirectionsR\n" +
+	"directions\x1aO\n" +
 	"\fPillarsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
-	"\x05value\x18\x02 \x01(\v2\x13.bazi.v1.PillarDataR\x05value:\x028\x01\"\xf4\x01\n" +
+	"\x05value\x18\x02 \x01(\v2\x13.bazi.v1.PillarDataR\x05value:\x028\x01\"v\n" +
+	"\n" +
+	"Directions\x12\x16\n" +
+	"\x06wealth\x18\x01 \x01(\tR\x06wealth\x12\x16\n" +
+	"\x06career\x18\x02 \x01(\tR\x06career\x12\x14\n" +
+	"\x05study\x18\x03 \x01(\tR\x05study\x12\"\n" +
+	"\frelationship\x18\x04 \x01(\tR\frelationship\"\xf4\x01\n" +
 	"\n" +
 	"PillarData\x12\x12\n" +
 	"\x04stem\x18\x01 \x01(\tR\x04stem\x12\x16\n" +
@@ -543,29 +647,31 @@ func file_bazi_v1_bazi_proto_rawDescGZIP() []byte {
 	return file_bazi_v1_bazi_proto_rawDescData
 }
 
-var file_bazi_v1_bazi_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_bazi_v1_bazi_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bazi_v1_bazi_proto_goTypes = []any{
 	(*GetChartRequest)(nil),  // 0: bazi.v1.GetChartRequest
 	(*GetChartResponse)(nil), // 1: bazi.v1.GetChartResponse
-	(*PillarData)(nil),       // 2: bazi.v1.PillarData
-	(*DaYunData)(nil),        // 3: bazi.v1.DaYunData
-	(*StrengthAnalysis)(nil), // 4: bazi.v1.StrengthAnalysis
-	(*Interpretation)(nil),   // 5: bazi.v1.Interpretation
-	nil,                      // 6: bazi.v1.GetChartResponse.PillarsEntry
+	(*Directions)(nil),       // 2: bazi.v1.Directions
+	(*PillarData)(nil),       // 3: bazi.v1.PillarData
+	(*DaYunData)(nil),        // 4: bazi.v1.DaYunData
+	(*StrengthAnalysis)(nil), // 5: bazi.v1.StrengthAnalysis
+	(*Interpretation)(nil),   // 6: bazi.v1.Interpretation
+	nil,                      // 7: bazi.v1.GetChartResponse.PillarsEntry
 }
 var file_bazi_v1_bazi_proto_depIdxs = []int32{
-	6, // 0: bazi.v1.GetChartResponse.pillars:type_name -> bazi.v1.GetChartResponse.PillarsEntry
-	3, // 1: bazi.v1.GetChartResponse.da_yun:type_name -> bazi.v1.DaYunData
-	4, // 2: bazi.v1.GetChartResponse.strength:type_name -> bazi.v1.StrengthAnalysis
-	5, // 3: bazi.v1.GetChartResponse.advice:type_name -> bazi.v1.Interpretation
-	2, // 4: bazi.v1.GetChartResponse.PillarsEntry.value:type_name -> bazi.v1.PillarData
-	0, // 5: bazi.v1.BaziService.GetChart:input_type -> bazi.v1.GetChartRequest
-	1, // 6: bazi.v1.BaziService.GetChart:output_type -> bazi.v1.GetChartResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	7, // 0: bazi.v1.GetChartResponse.pillars:type_name -> bazi.v1.GetChartResponse.PillarsEntry
+	4, // 1: bazi.v1.GetChartResponse.da_yun:type_name -> bazi.v1.DaYunData
+	5, // 2: bazi.v1.GetChartResponse.strength:type_name -> bazi.v1.StrengthAnalysis
+	6, // 3: bazi.v1.GetChartResponse.advice:type_name -> bazi.v1.Interpretation
+	2, // 4: bazi.v1.GetChartResponse.directions:type_name -> bazi.v1.Directions
+	3, // 5: bazi.v1.GetChartResponse.PillarsEntry.value:type_name -> bazi.v1.PillarData
+	0, // 6: bazi.v1.BaziService.GetChart:input_type -> bazi.v1.GetChartRequest
+	1, // 7: bazi.v1.BaziService.GetChart:output_type -> bazi.v1.GetChartResponse
+	7, // [7:8] is the sub-list for method output_type
+	6, // [6:7] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_bazi_v1_bazi_proto_init() }
@@ -579,7 +685,7 @@ func file_bazi_v1_bazi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bazi_v1_bazi_proto_rawDesc), len(file_bazi_v1_bazi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

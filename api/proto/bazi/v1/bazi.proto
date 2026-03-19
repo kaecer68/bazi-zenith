@@ -25,6 +25,16 @@ message GetChartResponse {
   int32 start_age_m = 6;
   StrengthAnalysis strength = 7;
   repeated Interpretation advice = 8;
+  repeated string favorable_elements = 9;
+  repeated string unfavorable_elements = 10;
+  Directions directions = 11;
+}
+
+message Directions {
+  string wealth = 1;
+  string career = 2;
+  string study = 3;
+  string relationship = 4;
 }
 
 message PillarData {

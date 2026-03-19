@@ -68,7 +68,15 @@ func toProto(r v1.BaziResponse) *bazipb.GetChartResponse {
 			IsDeZhu:    r.Strength.IsDeZhu,
 			Percentage: r.Strength.Percentage,
 		},
-		Pillars: make(map[string]*bazipb.PillarData),
+		Pillars:             make(map[string]*bazipb.PillarData),
+		FavorableElements:   r.FavorableElements,
+		UnfavorableElements: r.UnfavorableElements,
+		Directions: &bazipb.Directions{
+			Wealth:       r.Directions.Wealth,
+			Career:       r.Directions.Career,
+			Study:        r.Directions.Study,
+			Relationship: r.Directions.Relationship,
+		},
 	}
 
 	for name, p := range r.Pillars {

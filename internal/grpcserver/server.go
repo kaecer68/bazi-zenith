@@ -9,118 +9,97 @@ import (
 	"time"
 
 	"github.com/kaecer68/bazi-zenith/gen/bazipb"
+	v1 "github.com/kaecer68/bazi-zenith/pkg/api/v1"
 	"github.com/kaecer68/bazi-zenith/pkg/basis"
 	"github.com/kaecer68/bazi-zenith/pkg/engine"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-// Server implements the BaziService gRPC server
 type Server struct {
 	bazipb.UnimplementedBaziServiceServer
 	engine *engine.BaziEngine
 }
 
-// NewServer creates a new gRPC server instance
 func NewServer() *Server {
 	return &Server{
 		engine: engine.NewBaziEngine(),
 	}
 }
 
-// GetChart implements the BaziService.GetChart RPC method
 func (s *Server) GetChart(ctx context.Context, req *bazipb.GetChartRequest) (*bazipb.GetChartResponse, error) {
-	// Parse datetime
 	loc, _ := time.LoadLocation("Asia/Taipei")
 	birthTime, err := time.ParseInLocation("2006-01-02 15:04", req.Datetime, loc)
 	if err != nil {
-		// Try alternative format with T separator
 		birthTime, err = time.Parse(time.RFC3339, req.Datetime)
 		if err != nil {
 			return nil, fmt.Errorf("invalid datetime format: %v", err)
 		}
 	}
 
-	// Determine gender
 	gender := basis.Male
 	if req.Gender == "female" {
 		gender = basis.Female
 	}
 
-	// Get target year
 	targetYear := int(req.TargetYear)
 	if targetYear == 0 {
 		targetYear = time.Now().Year()
 	}
 
-	// Generate chart
 	chart := s.engine.GetBaziChart(birthTime, gender)
 	advice := chart.GenerateInterpretations(targetYear)
+	apiResp := v1.FromChart(chart, advice)
 
-	// Convert to proto response
-	return convertToProtoResponse(chart, advice, req.Gender), nil
+	return convertToProtoResponse(apiResp), nil
 }
 
-// convertToProtoResponse converts internal BaziChart to proto response
-func convertToProtoResponse(chart engine.BaziChart, advice []engine.Interpretation, gender string) *bazipb.GetChartResponse {
+func convertToProtoResponse(r v1.BaziResponse) *bazipb.GetChartResponse {
 	resp := &bazipb.GetChartResponse{
-		Gender:    gender,
-		DayStem:   string(chart.DayStem),
+		Gender:    r.Gender,
+		DayStem:   r.DayStem,
 		Pillars:   make(map[string]*bazipb.PillarData),
-		StartAgeY: int32(chart.StartAgeY),
-		StartAgeM: int32(chart.StartAgeM),
+		StartAgeY: int32(r.StartAgeY),
+		StartAgeM: int32(r.StartAgeM),
 		Strength: &bazipb.StrengthAnalysis{
-			Score:      chart.Strength.Score,
-			Status:     chart.Strength.Status,
-			IsDeLing:   chart.Strength.IsDeLing,
-			IsDeDi:     chart.Strength.IsDeDi,
-			IsDeZhu:    chart.Strength.IsDeZhu,
-			Percentage: chart.Strength.Percentage,
+			Score:      r.Strength.Score,
+			Status:     r.Strength.Status,
+			IsDeLing:   r.Strength.IsDeLing,
+			IsDeDi:     r.Strength.IsDeDi,
+			IsDeZhu:    r.Strength.IsDeZhu,
+			Percentage: r.Strength.Percentage,
+		},
+		FavorableElements:   r.FavorableElements,
+		UnfavorableElements: r.UnfavorableElements,
+		Directions: &bazipb.Directions{
+			Wealth:       r.Directions.Wealth,
+			Career:       r.Directions.Career,
+			Study:        r.Directions.Study,
+			Relationship: r.Directions.Relationship,
 		},
 	}
 
-	// Convert pillars
-	mapPillar := func(name string, d engine.PillarDetail) {
-		hStems := make([]string, len(d.HiddenStems))
-		for i, h := range d.HiddenStems {
-			hStems[i] = string(h.Stem)
-		}
-		tgHidden := make([]string, len(d.TenGodHidden))
-		for i, t := range d.TenGodHidden {
-			tgHidden[i] = string(t)
-		}
-		sSha := make([]string, len(d.ShenSha))
-		for i, s := range d.ShenSha {
-			sSha[i] = string(s)
-		}
-
+	for name, p := range r.Pillars {
 		resp.Pillars[name] = &bazipb.PillarData{
-			Stem:         string(d.Pillar.Stem),
-			Branch:       string(d.Pillar.Branch),
-			TenGodStem:   string(d.TenGodStem),
-			HiddenStems:  hStems,
-			TenGodHidden: tgHidden,
-			NaYin:        string(d.NaYin),
-			LifeStage:    string(d.LifeStage),
-			ShenSha:      sSha,
+			Stem:         p.Stem,
+			Branch:       p.Branch,
+			TenGodStem:   p.TenGodStem,
+			HiddenStems:  p.HiddenStems,
+			TenGodHidden: p.TenGodHidden,
+			NaYin:        p.NaYin,
+			LifeStage:    p.LifeStage,
+			ShenSha:      p.ShenSha,
 		}
 	}
 
-	mapPillar("year", chart.YearPillar)
-	mapPillar("month", chart.MonthPillar)
-	mapPillar("day", chart.DayPillar)
-	mapPillar("hour", chart.HourPillar)
-
-	// Convert DaYun
-	for _, dy := range chart.DaYun {
+	for _, dy := range r.DaYun {
 		resp.DaYun = append(resp.DaYun, &bazipb.DaYunData{
-			Pillar:   string(dy.Pillar.Stem) + string(dy.Pillar.Branch),
+			Pillar:   dy.Pillar,
 			StartAge: int32(dy.StartAge),
 		})
 	}
 
-	// Convert advice
-	for _, a := range advice {
+	for _, a := range r.Advice {
 		resp.Advice = append(resp.Advice, &bazipb.Interpretation{
 			Title:   a.Title,
 			Content: a.Content,
@@ -131,7 +110,6 @@ func convertToProtoResponse(chart engine.BaziChart, advice []engine.Interpretati
 	return resp
 }
 
-// Start starts the gRPC server
 func Start() {
 	port := os.Getenv("GRPC_PORT")
 	if port == "" {

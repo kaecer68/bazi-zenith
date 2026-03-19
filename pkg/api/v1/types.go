@@ -1,19 +1,23 @@
 package v1
 
 import (
+	"github.com/kaecer68/bazi-zenith/internal/service"
 	"github.com/kaecer68/bazi-zenith/pkg/engine"
 )
 
 // BaziResponse represents the standard JSON API response structure.
 type BaziResponse struct {
-	Gender    string                  `json:"gender"`
-	DayStem   string                  `json:"day_stem"`
-	Pillars   map[string]PillarData   `json:"pillars"` // year, month, day, hour
-	DaYun     []DaYunData             `json:"da_yun"`
-	StartAgeY int                     `json:"start_age_y"`
-	StartAgeM int                     `json:"start_age_m"`
-	Strength  engine.StrengthAnalysis `json:"strength"`
-	Advice    []engine.Interpretation `json:"advice"`
+	Gender              string                  `json:"gender"`
+	DayStem             string                  `json:"day_stem"`
+	Pillars             map[string]PillarData   `json:"pillars"` // year, month, day, hour
+	DaYun               []DaYunData             `json:"da_yun"`
+	StartAgeY           int                     `json:"start_age_y"`
+	StartAgeM           int                     `json:"start_age_m"`
+	Strength            engine.StrengthAnalysis `json:"strength"`
+	Advice              []engine.Interpretation `json:"advice"`
+	FavorableElements   []string                `json:"favorable_elements"`
+	UnfavorableElements []string                `json:"unfavorable_elements"`
+	Directions          BaziDirections          `json:"directions"`
 }
 
 type PillarData struct {
@@ -32,6 +36,14 @@ type DaYunData struct {
 	StartAge int    `json:"start_age"`
 }
 
+// BaziDirections represents auspicious directions per life area.
+type BaziDirections struct {
+	Wealth       string `json:"wealth"`
+	Career       string `json:"career"`
+	Study        string `json:"study"`
+	Relationship string `json:"relationship"`
+}
+
 // FromChart converts internal BaziChart to API Response.
 func FromChart(c engine.BaziChart, advice []engine.Interpretation) BaziResponse {
 	resp := BaziResponse{
@@ -42,6 +54,16 @@ func FromChart(c engine.BaziChart, advice []engine.Interpretation) BaziResponse 
 		Strength:  c.Strength,
 		Advice:    advice,
 		Pillars:   make(map[string]PillarData),
+	}
+
+	insights := service.BuildInsights(c)
+	resp.FavorableElements = insights.FavorableElements
+	resp.UnfavorableElements = insights.UnfavorableElements
+	resp.Directions = BaziDirections{
+		Wealth:       insights.Directions.Wealth,
+		Career:       insights.Directions.Career,
+		Study:        insights.Directions.Study,
+		Relationship: insights.Directions.Relationship,
 	}
 
 	mapPillar := func(name string, d engine.PillarDetail) {

@@ -1,4 +1,4 @@
-.PHONY: proto build-rest build-grpc build-all clean
+.PHONY: proto build-rest build-grpc build-cli build-all build-web clean dev
 
 # Proto code generation
 proto:
@@ -24,7 +24,10 @@ build-rest:
 build-grpc:
 	go build -o bin/bazi-grpc ./cmd/bazi-grpc
 
-build-all: build-cli build-rest build-grpc
+build-web:
+	cd web && npm run build
+
+build-all: build-cli build-rest build-grpc build-web
 
 # Run targets
 run-rest:
@@ -33,9 +36,22 @@ run-rest:
 run-grpc:
 	go run ./cmd/bazi-grpc -port 50051
 
+dev-web:
+	cd web && npm run dev
+
+# Development mode (backend + frontend)
+dev:
+	@echo "Starting development servers..."
+	@echo "Backend: http://localhost:8080"
+	@echo "Frontend: http://localhost:5173"
+	@make run-rest &
+	@sleep 2
+	@make dev-web
+
 # Clean
 clean:
 	rm -rf bin/
+	rm -rf web/dist/
 
 # Test
 test:

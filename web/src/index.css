@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Noto Serif TC', 'Microsoft YaHei', serif;
+  background-color: #fafaf8;
+  color: #1a1a1a;
+}
+
+.pillar-card {
+  @apply bg-white rounded-lg shadow-md p-4 border border-gray-200;
+}
+
+.stem-cell {
+  @apply text-2xl font-bold text-center py-2;
+}
+
+.branch-cell {
+  @apply text-2xl font-bold text-center py-2;
+}
+
+.ten-god {
+  @apply text-sm text-gray-600 text-center;
+}
+
+.element-badge {
+  @apply inline-flex items-center px-2 py-1 rounded text-xs font-medium;
+}
+
+.shensha-tag {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800 border border-red-200;
+}
+
+.section-title {
+  @apply text-lg font-bold text-gray-800 border-b-2 border-red-800 pb-2 mb-4;
+}
+
+.btn-primary {
+  @apply bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition-colors;
+}
+
+.input-field {
+  @apply w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
+}
+
+select {
+  @apply input-field;
+}

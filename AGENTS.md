@@ -1,132 +1,117 @@
 # AGENTS.md - Bazi-Zenith Development Guide
 
-## Project Overview
-- **Project**: Bazi-Zenith (八字命盤引擎)
-- **Type**: Go library and CLI tool for Chinese Bazi/Fortune-telling calculations
-- **Go Version**: 1.25.6
-- **Primary Language**: Traditional Chinese (繁體中文) for constants and documentation
+**Generated:** 2026-03-18
+**Module:** github.com/kaecer68/bazi-zenith
+**Go Version:** 1.25.6
 
-## Build, Lint & Test Commands
+## OVERVIEW
 
-### Running Tests
-```bash
-# Run all tests
-go test ./...
+八字命盤引擎 — Go library + CLI + gRPC/REST services for Chinese Bazi fortune-telling calculations. Built on lunar-zenith astronomical engine.
 
-# Run a single test file
-go test ./pkg/basis/ -v
+**Stack:** Go 1.25.6, gRPC, Protocol Buffers, Traditional Chinese domain constants
 
-# Run a specific test
-go test ./pkg/basis/ -run TestDayun -v
+---
+
+## 📋 契約優先開發流程 (Contract-First)
+
+### 契約是唯一真相
+
+**所有 API 變更必須遵循**:
+```
+destiny-contracts/openapi/bazi-zenith.yaml
 ```
 
-### Building
-```bash
-# Build CLI tool
-go build -o bazi-cli ./cmd/bazi-cli
+**規則**:
+- ✅ 先更新契約，再修改代碼
+- ✅ 不允許添加契約未定義的欄位
+- ✅ 不允許修改契約定義的類型
+- ✅ 如發現契約有問題，先更新契約
 
-# Run CLI
-./bazi-cli -dt "1990-05-15 14:30" -g male -y 2025
+### 契約文件位置
+
+```
+bazi-zenith/
+├── contracts/              # ← symlink 指向 destiny-contracts
+│   ├── openapi/
+│   │   └── bazi-zenith.yaml   # ← 契約源
+│   ├── TASK-BOARD.md       # 跨服務任務看板
+│   └── HANDOFF.md          # AI 交接報告
 ```
 
-### Code Quality
+### AI 任務執行流程
+
+1. **檢查 TASK-BOARD.md** → 了解當前任務
+2. **讀取契約文件** → 確認欄位定義
+3. **生成代碼** → `make generate`
+4. **實現業務邏輯** → `internal/service/`
+5. **驗證** → `openapi-generator validate`
+6. **填寫 HANDOFF.md** → 回報結果
+
+### 完成檢查清單
+
+```markdown
+- [ ] 已讀取最新契約文件
+- [ ] 已運行 make generate
+- [ ] 已運行 openapi-generator validate
+- [ ] 單元測試通過
+- [ ] 新增欄位已出現在契約中
+- [ ] API 響應範例與契約一致
+- [ ] 已更新 HANDOFF.md
+```
+
+---
+
+## WHERE TO LOOK
+
+| Task | Location | Notes |
+|------|----------|-------|
+| Domain data (Stems, Branches, TenGods) | `pkg/basis/` | Core constants, algorithms |
+| Bazi calculation engine | `pkg/engine/` | `BaziEngine`, `BaziChart` |
+| REST API service | `cmd/bazi-server/`, `internal/grpcserver/` | HTTP server |
+| gRPC service | `cmd/bazi-grpc/` | gRPC server |
+| CLI tool | `cmd/bazi-cli/` | Terminal排盤 |
+| Proto definitions | `api/proto/bazi/v1/` | Source of truth for RPC |
+| Generated proto code | `gen/bazipb/` | **DO NOT EDIT** |
+
+---
+
+## ANTI-PATTERNS (THIS PROJECT)
+
+- **NEVER edit** `gen/bazipb/*.go` — regenerated from proto
+- **NEVER add API fields** without updating `contracts/openapi/bazi-zenith.yaml` first
+- **AVOID custom error types** — use simple `error` returns (project convention)
+
+---
+
+## UNIQUE STYLES
+
+- **Traditional Chinese** for domain constants (e.g., `JiaStem = "甲"`)
+- **Mixed naming**: English for logic, Chinese for domain terms
+- **Table-driven tests** in `*_test.go` files
+
+---
+
+## COMMANDS
+
 ```bash
-# Format code
-go fmt ./...
+# Generate proto code
+make proto
 
-# Vet (static analysis)
-go vet ./...
+# Build all binaries
+make build-all
 
-# Run all checks
+# Test
+make test
+# Or: go test ./...
+
+# Format + vet + test
 go fmt ./... && go vet ./... && go test ./...
 ```
 
 ---
 
-## Code Style Guidelines
+## NOTES
 
-### Naming Conventions
-- **Types**: PascalCase (e.g., `BaziChart`, `PillarDetail`, `StemAttr`)
-- **Constants**: PascalCase with Chinese characters (e.g., `Jia Stem = "甲"`)
-- **Functions**: PascalCase (e.g., `GetTenGod`, `NewPillarDetail`)
-- **Variables**: Mixed - use descriptive English names for logic, Chinese for domain terms
-- **Packages**: Lowercase, single word (e.g., `basis`, `engine`, `v1`)
-
-### Import Organization
-Standard Go import grouping:
-```go
-import (
-    "flag"
-    "fmt"
-    "os"
-    "time"
-
-    "github.com/kaecer68/bazi-zenith/pkg/basis"
-    "github.com/kaecer68/bazi-zenith/pkg/engine"
-)
-```
-
-### Type Definitions
-- Use `type X string` for domain-specific string types
-- Use structs for composite data (follow existing patterns in `model.go`)
-- Embed basic types for clarity (e.g., `type Stem string`)
-
-### Error Handling
-- Use standard Go error patterns (return `error` from functions)
-- No custom error types yet - prefer simple error checking
-- Use `fmt.Errorf` for formatted error messages when needed
-
-### JSON API Types
-- Use `json:"field_name"` tags for serialization
-- Export all API response fields (capitalized)
-- Follow pattern in `pkg/api/v1/types.go` for conversion functions
-
-### Testing
-- Test files: `*_test.go` in same package as implementation
-- Use table-driven tests for multiple test cases
-- Test naming: `TestFunctionName`
-
-### Code Comments
-- Comment exported types and functions with English or Chinese
-- Use doc comments (leading `//` on line before declaration)
-- Example: `// Stem represents a Heavenly Stem (天干)`
-
-### Project Structure
-```
-bazi-zenith/
-├── cmd/bazi-cli/      # CLI entry point
-│   └── main.go
-├── pkg/
-│   ├── api/v1/        # JSON API types
-│   ├── basis/         # Core data definitions & algorithms
-│   └── engine/        # Bazi calculation engine
-└── go.mod
-```
-
-### Key Packages
-- **pkg/basis**: Contains all domain data (Stems, Branches, Elements, TenGods, etc.)
-- **pkg/engine**: Core `BaziEngine` and `BaziChart` types
-- **pkg/api/v1**: JSON response conversion
-
-### Common Operations
-```go
-// Create engine and generate chart
-e := engine.NewBaziEngine()
-chart := e.GetBaziChart(birthTime, gender)
-
-// Get interpretations
-advice := chart.GenerateInterpretations(2025)
-
-// Convert to API response
-resp := v1.FromChart(chart, advice)
-```
-
----
-
-## Dependencies
-- `github.com/kaecer68/lunar-zenith` - Astronomical calendar calculations
-
-## Notes
-- This is a Chinese domain-specific project using Traditional Chinese characters
-- Constants, error messages, and output may be in Chinese
-- Follow existing patterns in the codebase for consistency
+- **Contract symlink**: `contracts/` → `destiny-contracts/` (external repo)
+- **Dependencies**: `lunar-zenith` for astronomical calculations
+- **Age**: Small project (~3k LOC), disciplined Go patterns
