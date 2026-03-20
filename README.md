@@ -40,6 +40,16 @@
 
 ## 🚀 快速開始
 
+### 🔐 契約同步（開發前必做）
+
+- 單一真相檔：`contracts/runtime/ports.env`
+- 必跑指令：
+  1. `make sync-contracts`（同步最新契約埠位，生成 `.env.ports`）
+  2. `make verify-contracts`（確認 `.env.ports` 與契約一致）
+- 若埠位被占用：執行 `make dev-clean` 清理殘留行程
+- `.env.ports` 嚴禁手動修改，內容由腳本自動生成
+- PR / CI 已啟用 `verify-contracts`，未同步契約將直接被擋下
+
 ### 安裝
 
 ```bash
@@ -83,6 +93,8 @@ func main() {
 ```
 
 ### Web 前端管理介面
+
+開發埠位規範請先看：`docs/dev-ports.md`
 
 ```bash
 # 1. 啟動後端服務
@@ -131,13 +143,13 @@ make dev
 ```bash
 # 編譯 & 啟動
 go build -o bazi-server ./cmd/bazi-server
-./bazi-server -port 8080
+./bazi-server -port 8082
 ```
 
 **呼叫範例：**
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/chart \
+curl -X POST http://localhost:8082/api/v1/chart \
   -H "Content-Type: application/json" \
   -d '{"datetime": "1990-05-15 14:30", "gender": "male", "target_year": 2025}'
 ```
@@ -152,7 +164,7 @@ curl -X POST http://localhost:8080/api/v1/chart \
 ```bash
 # 編譯 & 啟動
 go build -o bazi-grpc ./cmd/bazi-grpc
-./bazi-grpc -port 50051
+./bazi-grpc -port 50052
 ```
 
 **Proto 定義**：`api/proto/bazi/v1/bazi.proto`
@@ -167,7 +179,7 @@ service BaziService {
 
 ```bash
 grpcurl -plaintext -d '{"datetime": "1990-05-15 14:30", "gender": "male", "target_year": 2025}' \
-  localhost:50051 bazi.v1.BaziService/GetChart
+  localhost:50052 bazi.v1.BaziService/GetChart
 ```
 
 > 已啟用 gRPC Server Reflection，可使用 grpcurl 或 Postman 直接探索 API。
