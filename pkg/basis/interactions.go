@@ -67,3 +67,23 @@ func GetBranchHai(b1, b2 Branch) bool {
 	// Using Chen variable
 	return haiMap[b1] == b2
 }
+
+// GetBranchXing returns true if two branches punish each other (相刑).
+func GetBranchXing(b1, b2 Branch) bool {
+	if b1 == b2 {
+		return b1 == Chen || b1 == WuB || b1 == You || b1 == Hai
+	}
+
+	pair := map[Branch]map[Branch]bool{
+		Zi:   {Mao: true},
+		Mao:  {Zi: true},
+		YinB: {Si: true, Shen: true},
+		Si:   {YinB: true, Shen: true},
+		Shen: {YinB: true, Si: true},
+		Chou: {Wei: true, Xu: true},
+		Wei:  {Chou: true, Xu: true},
+		Xu:   {Chou: true, Wei: true},
+	}
+
+	return pair[b1][b2]
+}

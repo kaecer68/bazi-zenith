@@ -1,11 +1,15 @@
-import { BaziResponse, getElementColor, getDirectionName } from '../types';
+import { useEffect, useMemo, useState } from 'react';
+import { BaziResponse, ChartQueryContext, getDirectionName, getElementColor } from '../types';
 import { TrendingUp, MapPin, Star, Activity, Calendar } from 'lucide-react';
 
 interface BaziChartProps {
   data: BaziResponse;
+  queryContext: ChartQueryContext | null;
+  onTargetYearChange: (year: number) => void | Promise<void>;
+  isSwitchingYear: boolean;
 }
 
-export default function BaziChart({ data }: BaziChartProps) {
+export default function BaziChart({ data, queryContext, onTargetYearChange, isSwitchingYear }: BaziChartProps) {
   const pillars = ['year', 'month', 'day', 'hour'] as const;
   const pillarNames: Record<string, string> = {
     year: '年柱',
@@ -13,6 +17,176 @@ export default function BaziChart({ data }: BaziChartProps) {
     day: '日柱',
     hour: '時柱'
   };
+
+  const getYearPillar = (year: number) => {
+    const stems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+    const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    let idx = (year - 4) % 60;
+    if (idx < 0) idx += 60;
+    return `${stems[idx % 10]}${branches[idx % 12]}`;
+  };
+
+  const detail = data.detail_chart;
+  const dayunBoard = detail?.dayun_board?.length
+    ? detail.dayun_board
+    : data.da_yun.map((item, idx) => ({
+        index: idx + 1,
+        year: 0,
+        start_age: item.start_age,
+        start_year: undefined,
+        pillar: item.pillar,
+        ten_god_stem: '',
+        ten_god_branch: '',
+      }));
+  const liunianBoard = detail?.liunian_board || [];
+  const targetYear = queryContext?.targetYear || liunianBoard[0]?.year || new Date().getFullYear();
+  const defaultDayunIndex = useMemo(() => {
+    if (dayunBoard.length === 0) return 0;
+    const idx = dayunBoard.findIndex((item, i) => {
+      const nextStart = dayunBoard[i + 1]?.start_year;
+      const inLowerBound = item.start_year === undefined || targetYear >= item.start_year;
+      const inUpperBound = nextStart === undefined || targetYear < nextStart;
+      return inLowerBound && inUpperBound;
+    });
+    return idx >= 0 ? idx : 0;
+  }, [dayunBoard, targetYear]);
+  const [selectedDayunIndex, setSelectedDayunIndex] = useState(defaultDayunIndex);
+
+  useEffect(() => {
+    setSelectedDayunIndex(defaultDayunIndex);
+  }, [defaultDayunIndex]);
+
+  const selectedDayun = dayunBoard[selectedDayunIndex];
+  const yearCandidates = useMemo(() => {
+    if (selectedDayun?.start_year) {
+      return Array.from({ length: 10 }, (_, i) => selectedDayun.start_year! + i);
+    }
+    if (liunianBoard.length > 0) {
+      return liunianBoard.map(item => item.year);
+    }
+    return Array.from({ length: 10 }, (_, i) => targetYear - 4 + i);
+  }, [selectedDayun, liunianBoard, targetYear]);
+
+  const selectedLiunian = useMemo(() => {
+    if (liunianBoard.length > 0) {
+      return liunianBoard.find(item => item.year === targetYear) || liunianBoard[0];
+    }
+    return {
+      year: targetYear,
+      pillar: getYearPillar(targetYear),
+      ten_god_stem: '',
+      ten_god_branch: '',
+    };
+  }, [liunianBoard, targetYear]);
+
+  const activeLiunianPillar = selectedLiunian?.pillar || '';
+  const activeDayunPillar = selectedDayun?.pillar || '';
+
+  const splitPillar = (pillar: string): [string, string] => {
+    const chars = Array.from(pillar || '');
+    return [chars[0] || '', chars[1] || ''];
+  };
+
+  const [dayunStem, dayunBranch] = splitPillar(activeDayunPillar);
+  const [liunianStem, liunianBranch] = splitPillar(activeLiunianPillar);
+
+  const stemHePairs = new Set(['甲己', '己甲', '乙庚', '庚乙', '丙辛', '辛丙', '丁壬', '壬丁', '戊癸', '癸戊']);
+  const stemChongPairs = new Set(['甲庚', '庚甲', '乙辛', '辛乙', '丙壬', '壬丙', '丁癸', '癸丁']);
+  const branchHePairs = new Set(['子丑', '丑子', '寅亥', '亥寅', '卯戌', '戌卯', '辰酉', '酉辰', '巳申', '申巳', '午未', '未午']);
+  const branchChongPairs = new Set(['子午', '午子', '丑未', '未丑', '寅申', '申寅', '卯酉', '酉卯', '辰戌', '戌辰', '巳亥', '亥巳']);
+  const branchHaiPairs = new Set(['子未', '未子', '丑午', '午丑', '寅巳', '巳寅', '卯辰', '辰卯', '申亥', '亥申', '酉戌', '戌酉']);
+  const branchXingPairs = new Set([
+    '子卯', '卯子',
+    '丑未', '未丑', '丑戌', '戌丑', '未戌', '戌未',
+    '寅巳', '巳寅', '寅申', '申寅', '巳申', '申巳',
+    '辰辰', '午午', '酉酉', '亥亥',
+  ]);
+
+  const isBranchXing = (a: string, b: string) => {
+    const pair = `${a}${b}`;
+    return branchXingPairs.has(pair);
+  };
+
+  const stemRel = (a: string, b: string) => {
+    const key = `${a}${b}`;
+    const tags: string[] = [];
+    if (stemHePairs.has(key)) tags.push('合');
+    if (stemChongPairs.has(key)) tags.push('沖');
+    return tags;
+  };
+
+  const branchRel = (a: string, b: string) => {
+    const key = `${a}${b}`;
+    const tags: string[] = [];
+    if (branchHePairs.has(key)) tags.push('合');
+    if (branchChongPairs.has(key)) tags.push('沖');
+    if (isBranchXing(a, b)) tags.push('刑');
+    if (branchHaiPairs.has(key)) tags.push('害');
+    return tags;
+  };
+
+  const interactions = useMemo(() => {
+    const nodes = [
+      {
+        label: '年柱',
+        stem: detail?.natal.tian_gan.year || data.pillars.year.stem,
+        branch: detail?.natal.di_zhi.year || data.pillars.year.branch,
+      },
+      {
+        label: '月柱',
+        stem: detail?.natal.tian_gan.month || data.pillars.month.stem,
+        branch: detail?.natal.di_zhi.month || data.pillars.month.branch,
+      },
+      {
+        label: '日柱',
+        stem: detail?.natal.tian_gan.day || data.pillars.day.stem,
+        branch: detail?.natal.di_zhi.day || data.pillars.day.branch,
+      },
+      {
+        label: '時柱',
+        stem: detail?.natal.tian_gan.hour || data.pillars.hour.stem,
+        branch: detail?.natal.di_zhi.hour || data.pillars.hour.branch,
+      },
+      ...(dayunStem || dayunBranch ? [{ label: '大運', stem: dayunStem, branch: dayunBranch }] : []),
+      ...(liunianStem || liunianBranch ? [{ label: '流年', stem: liunianStem, branch: liunianBranch }] : []),
+    ];
+
+    const stemNotes: string[] = [];
+    const branchNotes: string[] = [];
+    const stemSeen = new Set<string>();
+    const branchSeen = new Set<string>();
+
+    for (let i = 0; i < nodes.length; i += 1) {
+      for (let j = i + 1; j < nodes.length; j += 1) {
+        const a = nodes[i];
+        const b = nodes[j];
+
+        if (a.stem && b.stem) {
+          const tags = stemRel(a.stem, b.stem);
+          if (tags.length > 0) {
+            const key = `${a.label}-${b.label}-${a.stem}-${b.stem}-${tags.join('/')}`;
+            if (!stemSeen.has(key)) {
+              stemSeen.add(key);
+              stemNotes.push(`${a.label}${a.stem} × ${b.label}${b.stem}：${tags.join('/')}`);
+            }
+          }
+        }
+
+        if (a.branch && b.branch) {
+          const tags = branchRel(a.branch, b.branch);
+          if (tags.length > 0) {
+            const key = `${a.label}-${b.label}-${a.branch}-${b.branch}-${tags.join('/')}`;
+            if (!branchSeen.has(key)) {
+              branchSeen.add(key);
+              branchNotes.push(`${a.label}${a.branch} × ${b.label}${b.branch}：${tags.join('/')}`);
+            }
+          }
+        }
+      }
+    }
+
+    return { stem: stemNotes, branch: branchNotes };
+  }, [detail, data.pillars, dayunStem, dayunBranch, liunianStem, liunianBranch]);
 
   const getTenGodColor = (tenGod: string) => {
     if (tenGod.includes('比肩') || tenGod.includes('劫財')) return 'bg-blue-100 text-blue-800';
@@ -28,6 +202,12 @@ export default function BaziChart({ data }: BaziChartProps) {
     if (status.includes('弱')) return 'text-blue-600';
     return 'text-gray-600';
   };
+
+  const strengthStatus = data.strength.status || data.strength.Status || '未定';
+  const strengthScore = data.strength.score ?? data.strength.Score ?? 0;
+  const isDeLing = data.strength.is_de_ling ?? data.strength.IsDeLing;
+  const isDeDi = data.strength.is_de_di ?? data.strength.IsDeDi;
+  const isDeZhu = data.strength.is_de_zhu ?? data.strength.IsDeZhu;
 
   return (
     <div className="space-y-6">
@@ -149,6 +329,96 @@ export default function BaziChart({ data }: BaziChartProps) {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="section-title">沖合刑害即時分析</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border border-red-100 bg-red-50 rounded-lg p-3">
+              <p className="text-sm font-medium text-red-900 mb-2">天干（四柱＋大運＋流年）</p>
+              <div className="space-y-1 text-sm text-gray-700">
+                {interactions.stem.length > 0 ? interactions.stem.map((msg, idx) => <p key={idx}>{msg}</p>) : <p>目前無明顯沖合。</p>}
+              </div>
+            </div>
+
+            <div className="border border-blue-100 bg-blue-50 rounded-lg p-3">
+              <p className="text-sm font-medium text-blue-900 mb-2">地支（四柱＋大運＋流年）</p>
+              <div className="space-y-1 text-sm text-gray-700">
+                {interactions.branch.length > 0 ? interactions.branch.map((msg, idx) => <p key={idx}>{msg}</p>) : <p>目前無明顯沖合刑害。</p>}
+              </div>
+            </div>
+          </div>
+
+        <div className="mt-4 text-sm text-gray-600 bg-gray-50 rounded p-3 border border-gray-200">
+          <p className="font-medium mb-1">細盤六柱提示</p>
+          <p>{detail?.prompts.tiangan || '—'}</p>
+          <p>{detail?.prompts.dizhi || '—'}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="section-title flex items-center gap-2">
+          <TrendingUp size={20} />
+          大運 / 流年互動切換
+        </h2>
+
+          <div className="space-y-3 border border-orange-100 bg-orange-50 rounded-lg p-3">
+            <div>
+              <p className="text-sm text-orange-900 font-medium mb-2">大運切換</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {dayunBoard.map((item, idx) => (
+                  <button
+                    key={`${item.pillar}-${item.start_year || idx}`}
+                    type="button"
+                    onClick={() => setSelectedDayunIndex(idx)}
+                    className={`px-3 py-2 rounded border text-sm whitespace-nowrap ${
+                      idx === selectedDayunIndex
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-100'
+                    }`}
+                  >
+                    {item.start_age || 0}歲 · {item.pillar}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-orange-900 font-medium mb-2">流年切換（即時重算）</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {yearCandidates.map((year) => (
+                  <button
+                    key={year}
+                    type="button"
+                    disabled={isSwitchingYear}
+                    onClick={() => onTargetYearChange(year)}
+                    className={`px-3 py-1.5 rounded border text-sm whitespace-nowrap ${
+                      year === targetYear
+                        ? 'bg-red-700 text-white border-red-700'
+                        : 'bg-white text-gray-700 border-red-200 hover:bg-red-50'
+                    } ${isSwitchingYear ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-white rounded border border-gray-200 p-2">
+                <p className="text-gray-500">當前大運</p>
+                <p className="font-semibold text-gray-800">
+                  {activeDayunPillar || '—'}
+                  {selectedDayun?.start_year ? `（${selectedDayun.start_year}-${selectedDayun.start_year + 9}）` : ''}
+                </p>
+              </div>
+              <div className="bg-white rounded border border-gray-200 p-2">
+                <p className="text-gray-500">當前流年</p>
+                <p className="font-semibold text-gray-800">{targetYear} · {activeLiunianPillar || '—'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="section-title flex items-center gap-2">
           <Activity size={20} />
           身強身弱分析
@@ -157,11 +427,11 @@ export default function BaziChart({ data }: BaziChartProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm text-gray-500 mb-1">狀態評估</p>
-            <p className={`text-2xl font-bold ${getStrengthColor(data.strength.Status)}`}>
-              {data.strength.Status}
+            <p className={`text-2xl font-bold ${getStrengthColor(strengthStatus)}`}>
+              {strengthStatus}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              分數: {data.strength.Score.toFixed(1)}%
+              分數: {strengthScore.toFixed(1)}%
             </p>
           </div>
           
@@ -169,20 +439,20 @@ export default function BaziChart({ data }: BaziChartProps) {
             <p className="text-sm text-gray-500 mb-2">三得評估</p>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
-                <span className={data.strength.IsDeLing ? 'text-green-600' : 'text-gray-400'}>
-                  {data.strength.IsDeLing ? '✓' : '○'} 得令
+                <span className={isDeLing ? 'text-green-600' : 'text-gray-400'}>
+                  {isDeLing ? '✓' : '○'} 得令
                 </span>
                 <span className="text-xs text-gray-400">(月令)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className={data.strength.IsDeDi ? 'text-green-600' : 'text-gray-400'}>
-                  {data.strength.IsDeDi ? '✓' : '○'} 得地
+                <span className={isDeDi ? 'text-green-600' : 'text-gray-400'}>
+                  {isDeDi ? '✓' : '○'} 得地
                 </span>
                 <span className="text-xs text-gray-400">(地支)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className={data.strength.IsDeZhu ? 'text-green-600' : 'text-gray-400'}>
-                  {data.strength.IsDeZhu ? '✓' : '○'} 得助
+                <span className={isDeZhu ? 'text-green-600' : 'text-gray-400'}>
+                  {isDeZhu ? '✓' : '○'} 得助
                 </span>
                 <span className="text-xs text-gray-400">(天干)</span>
               </div>
@@ -273,48 +543,35 @@ export default function BaziChart({ data }: BaziChartProps) {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="section-title flex items-center gap-2">
-          <TrendingUp size={20} />
-          大運排列
-        </h2>
-        
-        <div className="overflow-x-auto">
-          <div className="flex gap-3 pb-2">
-            {data.da_yun.map((dy, idx) => (
-              <div key={idx} className="flex-shrink-0 bg-gray-50 rounded-lg p-3 min-w-[100px] text-center">
-                <p className="text-xs text-gray-500 mb-1">{dy.start_age} 歲</p>
-                <p className="text-lg font-bold text-gray-800">{dy.pillar}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="section-title">
           流年斷語
         </h2>
         
         <div className="space-y-3">
-          {data.advice.map((item, idx) => (
+          {data.advice.map((item, idx) => {
+            const adviceType = item.type || item.Type || '平';
+            const adviceTitle = item.title || item.Title || '提示';
+            const adviceContent = item.content || item.Content || '';
+            return (
             <div key={idx} className={`p-3 rounded-lg border-l-4 ${
-              item.Type === '吉' ? 'bg-green-50 border-green-500' :
-              item.Type === '凶' ? 'bg-red-50 border-red-500' :
+              adviceType === '吉' ? 'bg-green-50 border-green-500' :
+              adviceType === '凶' ? 'bg-red-50 border-red-500' :
               'bg-gray-50 border-gray-400'
             }`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                  item.Type === '吉' ? 'bg-green-200 text-green-800' :
-                  item.Type === '凶' ? 'bg-red-200 text-red-800' :
+                  adviceType === '吉' ? 'bg-green-200 text-green-800' :
+                  adviceType === '凶' ? 'bg-red-200 text-red-800' :
                   'bg-gray-200 text-gray-700'
                 }`}>
-                  {item.Type}
+                  {adviceType}
                 </span>
-                <span className="font-medium text-gray-800">{item.Title}</span>
+                <span className="font-medium text-gray-800">{adviceTitle}</span>
               </div>
-              <p className="text-sm text-gray-600">{item.Content}</p>
+              <p className="text-sm text-gray-600">{adviceContent}</p>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

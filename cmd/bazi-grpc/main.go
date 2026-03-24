@@ -49,7 +49,7 @@ func (s *baziServer) GetChart(_ context.Context, req *bazipb.GetChartRequest) (*
 
 	chart := s.engine.GetBaziChart(birthTime, gender)
 	advice := chart.GenerateInterpretations(targetYear)
-	apiResp := v1.FromChart(chart, advice)
+	apiResp := v1.FromChart(chart, advice, targetYear, birthTime.Year())
 
 	return toProto(apiResp), nil
 }
@@ -107,16 +107,78 @@ func toProto(r v1.BaziResponse) *bazipb.GetChartResponse {
 		})
 	}
 
+	resp.DetailChart = convertDetailChartToProto(r.DetailChart)
+
 	return resp
 }
 
-func main() {
-	defaultPort := 50052
-	if v := os.Getenv("GRPC_PORT"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil {
-			defaultPort = n
-		}
+func convertDetailChartToProto(dc v1.DetailChart) *bazipb.DetailChart {
+	protoDC := &bazipb.DetailChart{
+		Natal:            convertNatalMatrixToProto(dc.Natal),
+		FiveElementState: dc.FiveElementState,
+		Prompts: &bazipb.DetailPrompts{
+			Tiangan: dc.Prompts.Tiangan,
+			Dizhi:   dc.Prompts.Dizhi,
+		},
 	}
+
+	for _, item := range dc.DayunBoard {
+		protoDC.DayunBoard = append(protoDC.DayunBoard, &bazipb.BoardItem{
+			Index:        int32(item.Index),
+			Year:         int32(item.Year),
+			StartAge:     int32(item.StartAge),
+			StartYear:    int32(item.StartYear),
+			Pillar:       item.Pillar,
+			TenGodStem:   item.TenGodStem,
+			TenGodBranch: item.TenGodBranch,
+		})
+	}
+
+	for _, item := range dc.LiunianBoard {
+		protoDC.LiunianBoard = append(protoDC.LiunianBoard, &bazipb.BoardItem{
+			Year:         int32(item.Year),
+			Pillar:       item.Pillar,
+			TenGodStem:   item.TenGodStem,
+			TenGodBranch: item.TenGodBranch,
+		})
+	}
+
+	for _, item := range dc.LiuyueBoard {
+		protoDC.LiuyueBoard = append(protoDC.LiuyueBoard, &bazipb.MonthBoardItem{
+			Month:        int32(item.Month),
+			Pillar:       item.Pillar,
+			TenGodStem:   item.TenGodStem,
+			TenGodBranch: item.TenGodBranch,
+		})
+	}
+
+	return protoDC
+}
+
+func convertNatalMatrixToProto(nm v1.NatalMatrix) *bazipb.NatalMatrix {
+	return &bazipb.NatalMatrix{
+		TenGodStem: &bazipb.FourPillarsText{Year: nm.TenGodStem.Year, Month: nm.TenGodStem.Month, Day: nm.TenGodStem.Day, Hour: nm.TenGodStem.Hour},
+		TianGan:    &bazipb.FourPillarsText{Year: nm.TianGan.Year, Month: nm.TianGan.Month, Day: nm.TianGan.Day, Hour: nm.TianGan.Hour},
+		DiZhi:      &bazipb.FourPillarsText{Year: nm.DiZhi.Year, Month: nm.DiZhi.Month, Day: nm.DiZhi.Day, Hour: nm.DiZhi.Hour},
+		CangGan:    &bazipb.FourPillarsText{Year: nm.CangGan.Year, Month: nm.CangGan.Month, Day: nm.CangGan.Day, Hour: nm.CangGan.Hour},
+		NaYin:      &bazipb.FourPillarsText{Year: nm.NaYin.Year, Month: nm.NaYin.Month, Day: nm.NaYin.Day, Hour: nm.NaYin.Hour},
+		XingYun:    &bazipb.FourPillarsText{Year: nm.XingYun.Year, Month: nm.XingYun.Month, Day: nm.XingYun.Day, Hour: nm.XingYun.Hour},
+		ZiZuo:      &bazipb.FourPillarsText{Year: nm.ZiZuo.Year, Month: nm.ZiZuo.Month, Day: nm.ZiZuo.Day, Hour: nm.ZiZuo.Hour},
+		KongWang:   &bazipb.FourPillarsText{Year: nm.KongWang.Year, Month: nm.KongWang.Month, Day: nm.KongWang.Day, Hour: nm.KongWang.Hour},
+	}
+}
+
+func main() {
+	portStr := os.Getenv("GRPC_PORT")
+	if portStr == "" {
+		log.Fatal("GRPC_PORT environment variable is required. Please ensure .env.ports is loaded or set GRPC_PORT directly.")
+	}
+
+	defaultPort, err := strconv.Atoi(portStr)
+	if err != nil {
+		log.Fatalf("Invalid GRPC_PORT value: %v", err)
+	}
+
 	port := flag.Int("port", defaultPort, "gRPC server port (overridden by GRPC_PORT env)")
 	flag.Parse()
 
