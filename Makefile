@@ -1,4 +1,4 @@
-.PHONY: proto build-rest build-grpc build-cli build-all build-web clean dev
+.PHONY: proto build-rest build-grpc build-cli build-all build-web clean dev sync verify sync-contracts verify-contracts dev-clean smoke-prompts
 
 # Proto code generation
 proto:
@@ -31,10 +31,14 @@ build-all: build-cli build-rest build-grpc build-web
 
 # Run targets
 run-rest:
-	go run ./cmd/bazi-server -port 8080
+	@chmod +x scripts/sync-contracts.sh
+	bash scripts/sync-contracts.sh
+	bash -c 'set -a; . ./.env.ports; set +a; go run ./cmd/bazi-server -port "$$REST_PORT"'
 
 run-grpc:
-	go run ./cmd/bazi-grpc -port 50051
+	@chmod +x scripts/sync-contracts.sh
+	bash scripts/sync-contracts.sh
+	bash -c 'set -a; . ./.env.ports; set +a; go run ./cmd/bazi-grpc -port "$$GRPC_PORT"'
 
 dev-web:
 	cd web && npm run dev
@@ -42,11 +46,31 @@ dev-web:
 # Development mode (backend + frontend)
 dev:
 	@echo "Starting development servers..."
-	@echo "Backend: http://localhost:8080"
-	@echo "Frontend: http://localhost:5173"
+	@chmod +x scripts/sync-contracts.sh && bash scripts/sync-contracts.sh
+	@bash -c 'set -a; . ./.env.ports; set +a; echo "Backend: http://localhost:$$REST_PORT"; echo "Frontend: http://localhost:5173"'
 	@make run-rest &
 	@sleep 2
 	@make dev-web
+
+sync-contracts:
+	@chmod +x scripts/sync-contracts.sh
+	bash scripts/sync-contracts.sh
+
+sync: sync-contracts
+
+verify-contracts:
+	@chmod +x scripts/sync-contracts.sh
+	bash scripts/sync-contracts.sh --check
+
+verify: verify-contracts
+
+dev-clean:
+	@chmod +x scripts/dev-clean.sh
+	bash scripts/dev-clean.sh
+
+smoke-prompts:
+	@chmod +x scripts/smoke-prompts-consistency.sh
+	bash scripts/smoke-prompts-consistency.sh
 
 # Clean
 clean:
